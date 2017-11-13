@@ -6,17 +6,15 @@
 
 void setRandomLEDColor();
 void logPixyBlocks();
-void waitForSeconds(int seconds);
 void drive();
-int getIteratorBlock(int x);
-int calculateAngle(int block);
-int getOffset(Block left, Block right);
+bool millisDelay(unsigned long millis);
 
 Pixy pixy;
-int loopDelay = 1;
-int maxAllowedOffset = 15;
-int maxX = 319;
+unsigned long loopDelay = 250;
+int maxAllowedOffset = 38;
+int maxX = 319;+
 int maxY = 199;
+unsigned long time;
 
 MiniMoto motor0(0xC4); // A1 = 1, A0 = clear
 MiniMoto motor1(0xC0); // A1 = 1, A0 = 1 (default)
@@ -31,8 +29,11 @@ void setup()
 void loop()
 {
   //setRandomLEDColor();
-  logPixyBlocks();
-  waitForSeconds(loopDelay);
+  if(millisDelay(loopDelay))
+  {
+    logPixyBlocks();
+  }
+  //delay(1000);
 }
 
 void setRandomLEDColor()
@@ -50,17 +51,10 @@ void logPixyBlocks()
 
    if(blocks > 0)
    {
-    // lekker hardcoded
       if(pixy.blocks[0].signature == 10)
       {
-        //post its found, turn on
-//        Serial.print("found signature 12 en eigenlijk dus 10\n");
-        // Serial.print("x = ");
         pixy.blocks[0].print();
-        // Serial.println("in beeld");
-        // Serial.print("Angle = ");
-        //motor0.drive(25);
-        //motor1.drive(25);
+        //drive();
         drive();
       }
      }
@@ -73,79 +67,36 @@ void logPixyBlocks()
 
 void drive()
 {
-  //Drive left
-  if(pixy.blocks[0].x > ((maxX / 2) + maxAllowedOffset))
-  {
-      int speed = calculateAngle(getIteratorBlock(pixy.blocks[0].x));
-      motor0.drive(15 + speed);
-      motor1.drive(10);
-  }
-  //Drive right
-  else if(pixy.blocks[0].x < ((maxX / 2) - maxAllowedOffset))
-  {
-       int speed = calculateAngle(getIteratorBlock(pixy.blocks[0].x));
-       motor1.drive(15 + speed);
-       motor0.drive(10);
-  }
-  else
-  {
-    motor0.drive(15);
-    motor1.drive(15);
-  }
+   bool left = pixy.blocks[0].x > ((maxX / 2) + maxAllowedOffset);
+   bool right = pixy.blocks[0].x < ((maxX / 2) - maxAllowedOffset);
+
+   int x = pixy.blocks[0].x;
+   x = right ? 319 - x : x;
+
+   int speed = map(x,0,319,0,15);
+
+   Serial.println(speed);
+
+   int motor0Speed = left ? 25 + speed : 20;
+   int motor1Speed = right ? 25 + speed : 20;
+
+   motor0.drive(motor0Speed);
+   motor1.drive(motor1Speed);
 }
 
 //seconds is too slow so it's waiting for some random integer
-void waitForSeconds(int seconds)
+bool millisDelay(unsigned long milliSeconds)
 {
-  delay(seconds * 100);
-}
+   unsigned long millisArduino = millis();
+   if(millisArduino > time +  milliSeconds)
+   {
+     time = millis();
+     Serial.println("Seconds past...");
 
-int getIteratorBlock(int x)
-{
-   int block = x / (x/11);
+     return true;
+   }
 
-
-   return block;
-}
-
-int calculateAngle(int block)
-{
-  switch (block) {
-    case 1:
-     return 15;
-     break;
-    case 2:
-     return 12;
-     break;
-    case 3:
-     return 9;
-     break;
-    case 4:
-     return 6;
-     break;
-    case 5:
-     return 3;
-     break;
-    case 7:
-      return 3;
-      break;
-    case 8:
-      return 6;
-      break;
-    case 9:
-      return 9;
-      break;
-    case 10:
-      return 12;
-      break;
-    case 11:
-      return 15;
-      break;
-    default:
-      return 1;
-      break;
-  }
-
+   return false;
 }
 
 
