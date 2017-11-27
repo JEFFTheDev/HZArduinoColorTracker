@@ -7,11 +7,14 @@
 void setRandomLEDColor();
 void logPixyBlocks();
 void drive(Block b);
+void stopMotors();
 bool millisDelay(unsigned long millis);
 int findBlockIndexFromSignature(int signature);
 
 Pixy pixy;
-unsigned long loopDelay = 250;
+unsigned long loopDelay = 25;
+unsigned long stopAfter = 150;
+unsigned long afterLastSign;
 int maxAllowedOffset = 38;
 int maxX = 319;
 int maxY = 199;
@@ -40,13 +43,19 @@ void loop()
    if(index > -1 && pixy.blocks[index].signature == decimalSignature)
    {
      drive(pixy.blocks[index]);
+     afterLastSign = millis();
    }
-   else
-    {
-      motor0.stop();
-      motor1.stop();
-    }
+   else if(millis() > afterLastSign + stopAfter)
+   {
+      stopMotors(); 
+   }
   }
+}
+
+void stopMotors()
+{
+   motor0.stop();
+   motor1.stop();
 }
 
 // Signature 12 in Pixymon translates to 10 decimal (pixy.blocks)
