@@ -82,6 +82,7 @@ void refresh()
   {
     afterLastRefresh = millis();
     pixy.getBlocks();
+    Serial.println("Refresh blocks...");
   }
 }
 
